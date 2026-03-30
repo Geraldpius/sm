@@ -1,10 +1,16 @@
+from django.db import connection
 from .models import SchoolSettings
 
 
 def school_settings(request):
-    school = SchoolSettings.get_settings()
+    # Guard against missing table (before migrations run)
+    try:
+        if 'core_schoolsettings' not in connection.introspection.table_names():
+            return {}
+        school = SchoolSettings.get_settings()
+    except Exception:
+        return {}
 
-    # Safely get role
     user_role = 'admin'
     if request.user.is_authenticated:
         if request.user.is_superuser:
@@ -24,3 +30,4 @@ def school_settings(request):
         'currency': school.currency,
         'user_role': user_role,
     }
+```

@@ -1,0 +1,128 @@
+{% extends "base/base.html" %}
+{% load humanize custom_filters %}
+{% block title %}Bursar Dashboard{% endblock %}
+{% block breadcrumb %}<span class="current">Bursar Dashboard</span>{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>&#x1F4B0; Bursar Dashboard</h1>
+        <p>Welcome, {{ request.user.get_full_name }} &mdash; Finance & Fee Management</p>
+    </div>
+    <div class="flex gap-2">
+        <a href="{% url 'record_payment' %}" class="btn btn-success btn-lg"><i class="fas fa-money-bill-wave"></i> Record Payment</a>
+        <a href="{% url 'fee_defaulters' %}" class="btn btn-danger"><i class="fas fa-exclamation-circle"></i> Defaulters</a>
+    </div>
+</div>
+
+<!-- KPI -->
+<div class="stats-grid">
+    <div class="stat-card green"><div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-info"><h3>{{ currency }} {{ total_collected|intcomma }}</h3><p>Total Collected</p>
+            <span class="stat-trend up">Term {{ current_term }}, {{ current_year }}</span></div></div>
+    <div class="stat-card red"><div class="stat-icon"><i class="fas fa-balance-scale"></i></div>
+        <div class="stat-info"><h3>{{ currency }} {{ total_balance|intcomma }}</h3><p>Outstanding Balance</p>
+            <span class="stat-trend down">{{ defaulters_count }} students</span></div></div>
+    <div class="stat-card blue"><div class="stat-icon"><i class="fas fa-percent"></i></div>
+        <div class="stat-info"><h3>{{ collection_rate }}%</h3><p>Collection Rate</p>
+            <div class="progress-bar" style="margin-top:6px">
+                <div class="progress-fill" style="width:{{ collection_rate }}%;background:{% if collection_rate >= 80 %}var(--success){% elif collection_rate >= 50 %}var(--warning){% else %}var(--danger){% endif %}"></div>
+            </div></div></div>
+    <div class="stat-card gold"><div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
+        <div class="stat-info"><h3>{{ currency }} {{ today_collected|intcomma }}</h3><p>Today's Collection</p>
+            <span class="stat-trend">{{ today_count }} transaction{{ today_count|pluralize }}</span></div></div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+    <!-- Class-wise collection -->
+    <div class="card">
+        <div class="card-header"><h3><i class="fas fa-table" style="color:var(--primary)"></i> Collection by Class</h3>
+            <a href="{% url 'fees_dashboard' %}" class="btn btn-light btn-sm">Full Report</a></div>
+        <div class="table-wrap"><table>
+            <thead><tr><th>Class</th><th>Expected</th><th>Collected</th><th>Rate</th></tr></thead>
+            <tbody>{% for cf in class_fees %}
+            <tr>
+                <td style="font-weight:700">{{ cf.class.display_name }}</td>
+                <td style="font-size:12px;color:var(--text-muted)">{{ currency }} {{ cf.expected|intcomma }}</td>
+                <td style="font-weight:700;color:var(--success)">{{ currency }} {{ cf.collected|intcomma }}</td>
+                <td>
+                    <div class="progress-bar" style="width:70px;margin-bottom:2px">
+                        <div class="progress-fill" style="width:{{ cf.rate }}%;background:{% if cf.rate >= 80 %}var(--success){% elif cf.rate >= 50 %}var(--warning){% else %}var(--danger){% endif %}"></div>
+                    </div>
+                    <small style="font-size:11px">{{ cf.rate }}%</small>
+                </td>
+            </tr>
+            {% empty %}<tr><td colspan="4" class="text-center text-muted" style="padding:20px">No fee structures set up</td></tr>{% endfor %}
+            </tbody>
+        </table></div>
+    </div>
+
+    <!-- Payment method breakdown -->
+    <div class="card">
+        <div class="card-header"><h3><i class="fas fa-chart-pie" style="color:var(--info)"></i> By Payment Method</h3></div>
+        <div class="card-body">
+            {% for m in by_method %}
+            <div style="margin-bottom:14px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+                    <span style="font-weight:600;font-size:13.5px;text-transform:capitalize">
+                        <i class="fas fa-{% if m.payment_method == 'cash' %}money-bill{% elif m.payment_method == 'mobile_money' %}mobile-alt{% elif m.payment_method == 'bank' %}university{% else %}file-alt{% endif %}" style="color:var(--primary);margin-right:6px"></i>
+                        {{ m.payment_method|replace:"_: "|title }}
+                    </span>
+                    <span style="font-weight:700;color:var(--success)">{{ currency }} {{ m.total|intcomma }}</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                    <div class="progress-bar" style="flex:1">
+                        <div class="progress-fill" style="width:{% widthratio m.total total_collected 100 %}%;background:var(--info)"></div>
+                    </div>
+                    <small style="color:var(--text-muted);font-size:11px">{{ m.count }} txn{{ m.count|pluralize }}</small>
+                </div>
+            </div>
+            {% empty %}<p class="text-muted text-center">No payments recorded yet</p>{% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Top Defaulters -->
+<div class="card" style="margin-bottom:20px">
+    <div class="card-header">
+        <h3><i class="fas fa-exclamation-triangle" style="color:var(--danger)"></i> Top Fee Defaulters</h3>
+        <a href="{% url 'fee_defaulters' %}" class="btn btn-danger btn-sm"><i class="fas fa-list"></i> View All ({{ defaulters_count }})</a>
+    </div>
+    <div class="table-wrap"><table>
+        <thead><tr><th>#</th><th>Student</th><th>Class</th><th>Expected</th><th>Paid</th><th>Balance</th><th>Action</th></tr></thead>
+        <tbody>{% for d in defaulters %}
+        <tr>
+            <td style="color:var(--text-muted)">{{ forloop.counter }}</td>
+            <td><div style="font-weight:600">{{ d.student.full_name }}</div>
+                <div style="font-size:11px;color:var(--text-muted)">{{ d.student.student_id }}</div></td>
+            <td>{{ d.student.current_class|default:"—" }}</td>
+            <td style="font-size:13px">{{ currency }} {{ d.expected|intcomma }}</td>
+            <td style="color:var(--success);font-weight:600">{{ currency }} {{ d.paid|intcomma }}</td>
+            <td style="color:var(--danger);font-weight:700">{{ currency }} {{ d.balance|intcomma }}</td>
+            <td><a href="{% url 'record_payment' %}?student_id={{ d.student.pk }}" class="btn btn-sm btn-success"><i class="fas fa-plus"></i> Pay</a></td>
+        </tr>
+        {% empty %}<tr><td colspan="7" class="text-center text-muted" style="padding:20px"><i class="fas fa-check-circle" style="color:var(--success)"></i> No defaulters!</td></tr>{% endfor %}
+        </tbody>
+    </table></div>
+</div>
+
+<!-- Recent Payments -->
+<div class="card">
+    <div class="card-header"><h3><i class="fas fa-receipt" style="color:var(--success)"></i> Recent Payments</h3>
+        <a href="{% url 'payment_history' %}" class="btn btn-light btn-sm">All History</a></div>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Receipt #</th><th>Student</th><th>Class</th><th>Amount</th><th>Method</th><th>Date</th><th></th></tr></thead>
+        <tbody>{% for p in recent_payments %}
+        <tr>
+            <td style="font-family:monospace;font-weight:700">{{ p.receipt_number }}</td>
+            <td style="font-weight:600">{{ p.student.full_name }}</td>
+            <td style="font-size:12px">{{ p.student.current_class|default:"—" }}</td>
+            <td style="font-weight:700;color:var(--success)">{{ currency }} {{ p.amount_paid|intcomma }}</td>
+            <td><span class="badge badge-info">{{ p.get_payment_method_display }}</span></td>
+            <td style="font-size:12px;color:var(--text-muted)">{{ p.payment_date|date:"d M Y" }}</td>
+            <td><a href="{% url 'view_receipt' p.pk %}" class="btn btn-sm btn-light"><i class="fas fa-receipt"></i></a></td>
+        </tr>
+        {% empty %}<tr><td colspan="7" class="text-center text-muted" style="padding:20px">No payments recorded</td></tr>{% endfor %}
+        </tbody>
+    </table></div>
+</div>
+{% endblock %}

@@ -1,0 +1,265 @@
+{% extends "base/base.html" %}
+{% block title %}Register Student{% endblock %}
+{% block breadcrumb %}<a href="{% url 'student_list' %}">Students</a><span class="sep">/</span><span class="current">Register Student</span>{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div><h1>Register New Student</h1><p>Fill in all required fields to register a new student</p></div>
+</div>
+
+<form method="post" enctype="multipart/form-data">
+{% csrf_token %}
+<div class="tabs-container">
+    <div class="tabs">
+        <button type="button" class="tab-btn active" data-tab="tab-personal">Personal Info</button>
+        <button type="button" class="tab-btn" data-tab="tab-academic">Academic</button>
+        <button type="button" class="tab-btn" data-tab="tab-parent">Parent/Guardian</button>
+        <button type="button" class="tab-btn" data-tab="tab-health">Health & Other</button>
+    </div>
+
+    <div id="tab-personal" class="tab-pane active">
+        <div class="card">
+            <div class="card-body">
+                <div class="form-section">
+                    <div class="form-section-title">Basic Information</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">First Name <span class="req">*</span></label>
+                            <input type="text" name="first_name" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Last Name <span class="req">*</span></label>
+                            <input type="text" name="last_name" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Other Names</label>
+                            <input type="text" name="other_names" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Gender <span class="req">*</span></label>
+                            <select name="gender" class="form-control" required>
+                                <option value="">-- Select --</option>
+                                <option value="M">Male</option>
+                                <option value="F">Female</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Date of Birth <span class="req">*</span></label>
+                            <input type="date" name="date_of_birth" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Religion</label>
+                            <select name="religion" class="form-control">
+                                <option value="">-- Select --</option>
+                                <option value="Christian">Christian</option>
+                                <option value="Muslim">Muslim</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Nationality</label>
+                            <input type="text" name="nationality" class="form-control" value="Ugandan">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">District of Origin</label>
+                            <input type="text" name="district_of_origin" class="form-control">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="form-section-title">Contact</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Home Address</label>
+                            <textarea name="home_address" class="form-control" rows="2"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Student Phone</label>
+                            <input type="tel" name="phone" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Student Email</label>
+                            <input type="email" name="email" class="form-control">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="form-section-title">Photo</div>
+                    <div class="form-group">
+                        <label class="form-label">Passport Photo</label>
+                        <input type="file" name="photo" class="form-control" accept="image/*">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-academic" class="tab-pane">
+        <div class="card">
+            <div class="card-body">
+                <div class="form-section">
+                    <div class="form-section-title">Academic Details</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Class <span class="req">*</span></label>
+                            <select name="current_class" class="form-control" required>
+                                <option value="">-- Select Class --</option>
+                                {% for cls in classes %}
+                                <option value="{{ cls.id }}">{{ cls }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Admission Date <span class="req">*</span></label>
+                            <input type="date" name="admission_date" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Admission Number</label>
+                            <input type="text" name="admission_number" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">UNEB LIN Number</label>
+                            <input type="text" name="lin_number" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">UNEB Index Number</label>
+                            <input type="text" name="index_number" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Previous School</label>
+                            <input type="text" name="previous_school" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-grid-3">
+                        <div class="form-check">
+                            <input type="checkbox" name="is_boarder" id="is_boarder">
+                            <label for="is_boarder" class="form-label mb-0">Boarder</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" name="is_sponsored" id="is_sponsored">
+                            <label for="is_sponsored" class="form-label mb-0">Sponsored Student</label>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top:12px">
+                        <label class="form-label">Sponsor Name (if sponsored)</label>
+                        <input type="text" name="sponsor_name" class="form-control">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-parent" class="tab-pane">
+        <div class="card">
+            <div class="card-body">
+                <div class="form-section">
+                    <div class="form-section-title">Father's Details</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Father's Name</label>
+                            <input type="text" name="father_name" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Father's Phone</label>
+                            <input type="tel" name="father_phone" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Father's Occupation</label>
+                            <input type="text" name="father_occupation" class="form-control">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="form-section-title">Mother's Details</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Mother's Name</label>
+                            <input type="text" name="mother_name" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Mother's Phone</label>
+                            <input type="tel" name="mother_phone" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Mother's Occupation</label>
+                            <input type="text" name="mother_occupation" class="form-control">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="form-section-title">Guardian's Details</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Guardian's Name</label>
+                            <input type="text" name="guardian_name" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Guardian's Phone</label>
+                            <input type="tel" name="guardian_phone" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Relationship to Student</label>
+                            <input type="text" name="guardian_relationship" class="form-control" placeholder="e.g. Uncle, Aunt">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Guardian's Address</label>
+                            <textarea name="guardian_address" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-health" class="tab-pane">
+        <div class="card">
+            <div class="card-body">
+                <div class="form-section">
+                    <div class="form-section-title">Health Information</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Blood Group</label>
+                            <select name="blood_group" class="form-control">
+                                <option value="">-- Select --</option>
+                                <option value="A+">A+</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B-">B-</option>
+                                <option value="AB+">AB+</option>
+                                <option value="AB-">AB-</option>
+                                <option value="O+">O+</option>
+                                <option value="O-">O-</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Medical Conditions / Allergies</label>
+                        <textarea name="medical_conditions" class="form-control" rows="3" placeholder="List any known medical conditions, allergies, or special needs..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px">
+    <a href="{% url 'student_list' %}" class="btn btn-light"><i class="fas fa-times"></i> Cancel</a>
+    <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-save"></i> Register Student</button>
+</div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Fix tabs to work properly
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const tabId = this.dataset.tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+        this.classList.add('active');
+        document.getElementById(tabId).classList.add('active');
+    });
+});
+</script>
+{% endblock %}

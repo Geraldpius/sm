@@ -1,0 +1,28 @@
+{% extends "base/base.html" %}
+{% block title %}Subject Analysis - {{ exam.name }}{% endblock %}
+{% block breadcrumb %}<a href="{% url 'exam_list' %}">Exams</a><span class="sep">/</span><span class="current">Analysis</span>{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>Subject Analysis: {{ exam.name }}</h1><p>{{ exam.classroom }} — Term {{ exam.term }}, {{ exam.academic_year }}</p></div>
+<button onclick="window.print()" class="btn btn-light btn-sm no-print"><i class="fas fa-print"></i> Print</button></div>
+<div class="card"><div class="table-wrap"><table>
+    <thead><tr><th>Subject</th><th>Students</th><th>Highest</th><th>Lowest</th><th>Average</th><th>Pass Rate</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E/F/U</th></tr></thead>
+    <tbody>{% for a in analysis %}
+    <tr>
+        <td style="font-weight:700">{{ a.subject.name }}</td>
+        <td>{{ a.count }}</td>
+        <td style="color:var(--success);font-weight:700">{{ a.highest }}</td>
+        <td style="color:var(--danger);font-weight:700">{{ a.lowest }}</td>
+        <td style="font-weight:700">{{ a.average }}</td>
+        <td>
+            <div class="progress-bar" style="width:80px;margin-bottom:3px"><div class="progress-fill" style="width:{{ a.pass_rate }}%;background:{% if a.pass_rate >= 75 %}var(--success){% elif a.pass_rate >= 50 %}var(--warning){% else %}var(--danger){% endif %}"></div></div>
+            <small>{{ a.pass_rate }}%</small>
+        </td>
+        <td class="grade-a">{{ a.grade_dist.A }}</td>
+        <td class="grade-b">{{ a.grade_dist.B }}</td>
+        <td class="grade-c">{{ a.grade_dist.C }}</td>
+        <td class="grade-d">{{ a.grade_dist.D }}</td>
+        <td class="grade-f">{{ a.grade_dist.E|add:a.grade_dist.F|add:a.grade_dist.U }}</td>
+    </tr>
+    {% empty %}<tr><td colspan="11" class="text-center text-muted" style="padding:30px">No marks entered yet</td></tr>{% endfor %}</tbody>
+</table></div></div>
+{% endblock %}

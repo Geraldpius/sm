@@ -1,0 +1,126 @@
+{% extends "base/base.html" %}
+{% load humanize %}
+{% block title %}Students{% endblock %}
+{% block breadcrumb %}<a href="{% url 'student_list' %}">Students</a><span class="sep">/</span><span class="current">All Students</span>{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div><h1>Students</h1><p>{{ total }} student{{ total|pluralize }} enrolled</p></div>
+    <div class="flex gap-2">
+        <a href="{% url 'export_students_csv' %}" class="btn btn-light btn-sm"><i class="fas fa-file-csv"></i> Export CSV</a>
+        <a href="{% url 'promote_students' %}" class="btn btn-warning btn-sm"><i class="fas fa-level-up-alt"></i> Promote</a>
+        <a href="{% url 'student_register' %}" class="btn btn-primary"><i class="fas fa-user-plus"></i> Register Student</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <form method="get" class="search-bar w-full">
+            <div class="search-input" style="flex:2">
+                <i class="fas fa-search"></i>
+                <input type="text" name="q" value="{{ q }}" placeholder="Search by name, ID, admission number...">
+            </div>
+            <select name="class_id" class="form-control" style="max-width:160px">
+                <option value="">All Classes</option>
+                {% for cls in classes %}
+                <option value="{{ cls.id }}" {% if class_filter == cls.id|stringformat:"s" %}selected{% endif %}>{{ cls.display_name }}</option>
+                {% endfor %}
+            </select>
+            <select name="gender" class="form-control" style="max-width:120px">
+                <option value="">All Genders</option>
+                <option value="M" {% if request.GET.gender == 'M' %}selected{% endif %}>Male</option>
+                <option value="F" {% if request.GET.gender == 'F' %}selected{% endif %}>Female</option>
+            </select>
+            <select name="boarder" class="form-control" style="max-width:130px">
+                <option value="">All Students</option>
+                <option value="true">Boarders</option>
+                <option value="false">Day Scholars</option>
+            </select>
+            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-filter"></i> Filter</button>
+            <a href="{% url 'student_list' %}" class="btn btn-light btn-sm">Clear</a>
+        </form>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Student ID</th>
+                    <th>Full Name</th>
+                    <th>Gender</th>
+                    <th>Class</th>
+                    <th>Type</th>
+                    <th>Guardian Phone</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr>
+                    <td style="color:var(--text-muted);font-size:12px">{{ forloop.counter }}</td>
+                    <td>
+                        <span class="badge badge-primary" style="font-family:monospace">{{ student.student_id }}</span>
+                    </td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:10px">
+                            <div class="avatar-sm" style="background:{% if student.gender == 'M' %}#dbeafe{% else %}#fce7f3{% endif %};color:{% if student.gender == 'M' %}#1d4ed8{% else %}#be185d{% endif %}">
+                                {{ student.first_name|first }}{{ student.last_name|first }}
+                            </div>
+                            <div>
+                                <div style="font-weight:600">{{ student.full_name }}</div>
+                                <div style="font-size:11px;color:var(--text-muted)">{{ student.admission_number }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge {% if student.gender == 'M' %}badge-info{% else %}badge-danger{% endif %}">
+                            {{ student.get_gender_display }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if student.current_class %}
+                        <a href="{% url 'class_access' student.current_class.id %}" style="color:var(--primary);font-weight:600">{{ student.current_class.display_name }}</a>
+                        {% else %}<span class="text-muted">—</span>{% endif %}
+                    </td>
+                    <td>
+                        {% if student.is_boarder %}
+                        <span class="badge badge-warning">Boarder</span>
+                        {% else %}
+                        <span class="badge badge-secondary">Day</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-size:13px">{{ student.guardian_phone|default:student.father_phone|default:"—" }}</td>
+                    <td>
+                        <div class="flex gap-2">
+                            <a href="{% url 'student_detail' student.pk %}" class="btn btn-sm btn-primary" title="View"><i class="fas fa-eye"></i></a>
+                            <a href="{% url 'student_edit' student.pk %}" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a>
+                            <a href="{% url 'student_id_card' student.pk %}" class="btn btn-sm btn-info" title="ID Card" target="_blank"><i class="fas fa-id-card"></i></a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align:center;padding:40px">
+                        <i class="fas fa-user-graduate" style="font-size:40px;color:var(--border);display:block;margin-bottom:12px"></i>
+                        No students found. <a href="{% url 'student_register' %}">Register the first student</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if students.has_other_pages %}
+    <div class="card-footer">
+        <div class="pagination">
+            {% if students.has_previous %}
+            <a href="?page={{ students.previous_page_number }}&q={{ q }}&class_id={{ class_filter }}">&laquo; Prev</a>
+            {% endif %}
+            <span class="current">Page {{ students.number }} of {{ students.paginator.num_pages }}</span>
+            {% if students.has_next %}
+            <a href="?page={{ students.next_page_number }}&q={{ q }}&class_id={{ class_filter }}">Next &raquo;</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

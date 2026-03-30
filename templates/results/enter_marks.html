@@ -1,0 +1,191 @@
+{% extends "base/base.html" %}
+{% block title %}Enter Marks - {{ exam.name }}{% endblock %}
+{% block breadcrumb %}<a href="{% url 'exam_list' %}">Exams</a><span class="sep">/</span><span class="current">Enter Marks</span>{% endblock %}
+
+{% block extra_head %}
+<style>
+.marks-table { border-collapse: collapse; width: 100%; }
+.marks-table th { background: var(--primary); color: #fff; padding: 10px 8px; font-size: 12px; white-space: nowrap; position: sticky; top: 0; z-index: 10; }
+.marks-table th.student-col { background: #1a2f4e; min-width: 180px; }
+.marks-table td { padding: 4px 5px; border-bottom: 1px solid var(--border); }
+.marks-table tr:hover td { background: #f0f4f8; }
+.marks-input { width: 55px; border: 1.5px solid var(--border); border-radius: 5px; padding: 5px 4px; font-size: 13px; text-align: center; font-family: inherit; }
+.marks-input:focus { outline: none; border-color: var(--primary); background: #e8f0fe; }
+.marks-input.grade-a { background: #e8f5e9; border-color: #a5d6a7; }
+.marks-input.grade-b { background: #e3f2fd; border-color: #90caf9; }
+.marks-input.grade-c { background: #f3e5f5; border-color: #ce93d8; }
+.marks-input.grade-d { background: #fff3e0; border-color: #ffcc80; }
+.marks-input.grade-e, .marks-input.grade-f, .marks-input.grade-u { background: #ffebee; border-color: #ef9a9a; }
+.grade-cell { width: 32px; text-align: center; font-weight: 700; font-size: 13px; }
+.sticky-name { position: sticky; left: 0; background: #fff; z-index: 5; min-width: 180px; font-weight: 600; border-right: 2px solid var(--border); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Enter Marks: {{ exam.name }}</h1>
+        <p>{{ exam.classroom }} &bull; {{ exam.get_exam_type_display }} &bull; Term {{ exam.term }}, {{ exam.academic_year }} &bull; Max: {{ exam.max_marks }}</p>
+    </div>
+    <div class="flex gap-2">
+        <a href="{% url 'class_results' exam.classroom_id %}" class="btn btn-light btn-sm"><i class="fas fa-chart-bar"></i> View Results</a>
+        <a href="{% url 'subject_analysis' exam.pk %}" class="btn btn-info btn-sm"><i class="fas fa-chart-pie"></i> Analysis</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div class="flex items-center gap-2">
+            <span style="font-size:13px"><i class="fas fa-info-circle" style="color:var(--info)"></i> Enter marks out of <strong>{{ exam.max_marks }}</strong>. Grades are computed automatically.</span>
+        </div>
+        <div>
+            <span class="badge badge-primary">{{ students|length }} Students</span>
+            <span class="badge badge-info">{{ subjects|length }} Subjects</span>
+        </div>
+    </div>
+    <form method="post" id="marksForm">
+        {% csrf_token %}
+        <div style="overflow-x:auto;max-height:70vh;overflow-y:auto">
+            <table class="marks-table">
+                <thead>
+                    <tr>
+                        <th class="student-col">#&nbsp;&nbsp;Student</th>
+                        {% for subject in subjects %}
+                        <th style="min-width:85px">
+                            <div>{{ subject.code }}</div>
+                            <div style="font-weight:400;font-size:10px;opacity:0.8">{{ subject.name|truncatechars:12 }}</div>
+                        </th>
+                        {% endfor %}
+                        <th>Avg</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td class="sticky-name">
+                            <span style="color:var(--text-muted);margin-right:6px;font-size:11px">{{ forloop.counter }}</span>
+                            {{ student.full_name }}
+                        </td>
+                        {% for subject in subjects %}
+                        <td style="text-align:center">
+                            {% with key=student.pk|stringformat:"s" %}
+                            {% with existing_result=existing|default:'' %}
+                            <input type="number"
+                                   name="marks_{{ student.pk }}_{{ subject.pk }}"
+                                   class="marks-input"
+                                   min="0" max="{{ exam.max_marks }}"
+                                   step="0.5"
+                                   value="{% with r=existing|default:'' %}{% if r %}{% for k, v in r.items %}{% if k.0 == student.pk and k.1 == subject.pk %}{{ v.marks }}{% endif %}{% endfor %}{% endif %}{% endwith %}"
+                                   data-max="{{ exam.max_marks }}"
+                                   oninput="updateGrade(this, {{ exam.max_marks }})">
+                            {% endwith %}{% endwith %}
+                        </td>
+                        {% endfor %}
+                        <td class="grade-cell" id="avg_{{ student.pk }}" style="color:var(--text-muted)">—</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer flex justify-between items-center">
+            <span style="font-size:13px;color:var(--text-muted)">
+                <i class="fas fa-keyboard"></i> Use Tab to move between cells
+            </span>
+            <div class="flex gap-2">
+                <button type="button" onclick="clearAll()" class="btn btn-light btn-sm">Clear All</button>
+                <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-save"></i> Save All Marks</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Grade scale reference -->
+<div class="card" style="margin-top:16px">
+    <div class="card-body" style="padding:12px 20px">
+        <strong style="font-size:13px">Grading Scale:</strong>
+        <span class="badge" style="background:#e8f5e9;color:#2e7d32;margin-left:8px">A = ≥80%</span>
+        <span class="badge" style="background:#e3f2fd;color:#1565c0;margin-left:4px">B = 70-79%</span>
+        <span class="badge" style="background:#f3e5f5;color:#6a1570;margin-left:4px">C = 60-69%</span>
+        <span class="badge" style="background:#fff3e0;color:#e65100;margin-left:4px">D = 50-59%</span>
+        <span class="badge" style="background:#ffebee;color:#b71c1c;margin-left:4px">E = 40-49%</span>
+        <span class="badge" style="background:#ffebee;color:#b71c1c;margin-left:4px">F = 30-39%</span>
+        <span class="badge badge-secondary" style="margin-left:4px">U = &lt;30%</span>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Pre-load existing marks
+const existing = {
+    {% for k, v in existing.items %}
+    '{{ k.0 }}_{{ k.1 }}': {{ v.marks }},
+    {% endfor %}
+};
+
+// Set existing values
+document.querySelectorAll('.marks-input').forEach(inp => {
+    const name = inp.name; // marks_studentId_subjectId
+    const parts = name.split('_');
+    const key = parts[1] + '_' + parts[2];
+    if (existing[key] !== undefined) {
+        inp.value = existing[key];
+        updateGrade(inp, inp.dataset.max);
+    }
+});
+
+function updateGrade(input, maxMarks) {
+    const val = parseFloat(input.value);
+    if (isNaN(val) || input.value === '') {
+        input.className = 'marks-input';
+        return;
+    }
+    const pct = (val / maxMarks) * 100;
+    let grade = 'U';
+    if (pct >= 80) grade = 'A';
+    else if (pct >= 70) grade = 'B';
+    else if (pct >= 60) grade = 'C';
+    else if (pct >= 50) grade = 'D';
+    else if (pct >= 40) grade = 'E';
+    else if (pct >= 30) grade = 'F';
+    input.className = 'marks-input grade-' + grade.toLowerCase();
+    input.title = grade + ' (' + pct.toFixed(1) + '%)';
+
+    // Update row average
+    const row = input.closest('tr');
+    const inputs = row.querySelectorAll('.marks-input');
+    let sum = 0, count = 0;
+    inputs.forEach(i => {
+        const v = parseFloat(i.value);
+        if (!isNaN(v)) { sum += v; count++; }
+    });
+    const avgCell = row.querySelector('[id^="avg_"]');
+    if (avgCell && count > 0) {
+        const avg = (sum / (count * maxMarks)) * 100;
+        avgCell.textContent = avg.toFixed(1) + '%';
+        avgCell.style.color = avg >= 50 ? 'var(--success)' : 'var(--danger)';
+        avgCell.style.fontWeight = '700';
+    }
+}
+
+function clearAll() {
+    if (confirm('Clear all marks in this form? (Saved marks will not be deleted until you Save)')) {
+        document.querySelectorAll('.marks-input').forEach(i => {
+            i.value = '';
+            i.className = 'marks-input';
+        });
+    }
+}
+
+// Auto-save warning
+window.addEventListener('beforeunload', function(e) {
+    const hasValues = Array.from(document.querySelectorAll('.marks-input')).some(i => i.value !== '');
+    if (hasValues && !document.getElementById('marksForm').dataset.saved) {
+        e.returnValue = 'You have unsaved marks. Are you sure you want to leave?';
+    }
+});
+document.getElementById('marksForm').addEventListener('submit', function() {
+    this.dataset.saved = 'true';
+});
+</script>
+{% endblock %}

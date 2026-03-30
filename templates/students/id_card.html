@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ID Card - {{ student.full_name }}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#f0f4f8;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'Arial',sans-serif;padding:20px}
+.print-btn{position:fixed;top:20px;right:20px;background:#1e3a5f;color:#fff;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-size:14px}
+.id-card{width:320px;border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,0.2);background:#fff}
+.id-top{background:linear-gradient(135deg,#1e3a5f,#2d5a8e);padding:16px;text-align:center;color:#fff}
+.id-top .school-name{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.id-top .id-title{font-size:10px;opacity:0.7;margin-top:2px}
+.id-photo-row{background:#2d5a8e;display:flex;justify-content:center;padding:14px}
+.id-photo{width:90px;height:90px;border-radius:50%;border:3px solid #f0a500;overflow:hidden;background:#e8f0fe;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:#1e3a5f}
+.id-photo img{width:100%;height:100%;object-fit:cover}
+.id-body{padding:16px}
+.student-name{text-align:center;font-size:16px;font-weight:700;color:#1e3a5f;border-bottom:2px solid #f0a500;padding-bottom:8px;margin-bottom:12px}
+.id-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:12px}
+.id-row .label{color:#718096;font-weight:600;text-transform:uppercase;font-size:10px;letter-spacing:0.5px}
+.id-row .value{font-weight:600;color:#2d3748}
+.id-bottom{background:#1e3a5f;padding:10px 16px;text-align:center}
+.id-number{font-family:monospace;font-size:15px;font-weight:700;color:#f0a500;letter-spacing:2px}
+.id-bottom small{display:block;color:rgba(255,255,255,0.5);font-size:9px;margin-top:2px}
+@media print{.print-btn{display:none}body{background:#fff;min-height:auto;padding:0}}.id-card{margin:0 auto}
+</style>
+</head>
+<body>
+<button class="print-btn" onclick="window.print()">🖨️ Print ID Card</button>
+<div class="id-card">
+    <div class="id-top">
+        <div class="school-name">{{ school.name }}</div>
+        <div class="id-title">{% if school.motto %}{{ school.motto }}{% else %}Student Identity Card{% endif %}</div>
+    </div>
+    <div class="id-photo-row">
+        <div class="id-photo">
+            {% if student.photo %}<img src="{{ student.photo.url }}" alt="Photo">
+            {% else %}{{ student.first_name|first }}{{ student.last_name|first }}{% endif %}
+        </div>
+    </div>
+    <div class="id-body">
+        <div class="student-name">{{ student.full_name }}</div>
+        <div class="id-row"><span class="label">Class</span><span class="value">{{ student.current_class|default:"—" }}</span></div>
+        <div class="id-row"><span class="label">Gender</span><span class="value">{{ student.get_gender_display }}</span></div>
+        <div class="id-row"><span class="label">Blood Group</span><span class="value">{{ student.blood_group|default:"Unknown" }}</span></div>
+        <div class="id-row"><span class="label">Guardian</span><span class="value">{{ student.guardian_name|default:student.father_name|default:"—"|truncatechars:20 }}</span></div>
+        <div class="id-row"><span class="label">Contact</span><span class="value">{{ student.guardian_phone|default:student.father_phone|default:"—" }}</span></div>
+        <div class="id-row"><span class="label">Year</span><span class="value">{{ school.current_year }}/{{ school.current_year|add:1 }}</span></div>
+    </div>
+    <div class="id-bottom">
+        <div class="id-number">{{ student.student_id }}</div>
+        <small>This card remains the property of {{ school.name }}</small>
+    </div>
+</div>
+</body>
+</html>

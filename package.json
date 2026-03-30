@@ -1,0 +1,40 @@
+{
+  "name": "school-management-system",
+  "version": "1.0.0",
+  "description": "Uganda Secondary School Management System",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win --x64",
+    "dist:mac": "electron-builder --mac",
+    "dist:linux": "electron-builder --linux"
+  },
+  "build": {
+    "appId": "ug.school.sms",
+    "productName": "School Management System",
+    "directories": { "output": "dist" },
+    "files": [
+      "electron/**",
+      "!node_modules"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "static/img/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "static/img/icon.icns"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "static/img/icon.png"
+    }
+  },
+  "keywords": ["school", "management", "uganda", "education"],
+  "author": "School Management System",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0"
+  }
+}

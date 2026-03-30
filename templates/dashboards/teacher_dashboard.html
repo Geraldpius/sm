@@ -1,0 +1,92 @@
+{% extends "base/base.html" %}
+{% load humanize %}
+{% block title %}Teacher Dashboard{% endblock %}
+{% block breadcrumb %}<span class="current">My Dashboard</span>{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>&#x1F4DA; Teacher Dashboard</h1>
+        <p>Welcome, {{ request.user.get_full_name }} &mdash; Your Classes & Exams</p>
+    </div>
+    <a href="{% url 'exam_list' %}" class="btn btn-primary"><i class="fas fa-clipboard-list"></i> View Exams</a>
+</div>
+
+<!-- KPI -->
+<div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="stat-card blue"><div class="stat-icon"><i class="fas fa-chalkboard"></i></div>
+        <div class="stat-info"><h3>{{ my_classes.count }}</h3><p>My Classes</p></div></div>
+    <div class="stat-card gold"><div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
+        <div class="stat-info"><h3>{{ total_students }}</h3><p>My Students</p></div></div>
+    <div class="stat-card teal"><div class="stat-icon"><i class="fas fa-clipboard-list"></i></div>
+        <div class="stat-info"><h3>{{ my_exams.count }}</h3><p>Exams This Term</p></div></div>
+</div>
+
+{% if not my_classes %}
+<div class="card">
+    <div class="card-body" style="text-align:center;padding:60px">
+        <i class="fas fa-chalkboard" style="font-size:48px;color:var(--border);display:block;margin-bottom:16px"></i>
+        <h3 style="margin-bottom:8px">No Classes Assigned</h3>
+        <p class="text-muted">Contact your administrator to get assigned to classes.</p>
+    </div>
+</div>
+{% else %}
+
+<!-- My Classes Detail -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin-bottom:20px">
+    {% for cd in class_data %}
+    <div class="card">
+        <div class="card-header" style="background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff">
+            <h3 style="color:#fff">{{ cd.class.display_name }}</h3>
+            <span class="badge" style="background:rgba(255,255,255,.2);color:#fff">{{ cd.students }} students</span>
+        </div>
+        <div class="card-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+                <div style="text-align:center;padding:12px;background:#f8fafc;border-radius:8px">
+                    <div style="font-size:22px;font-weight:700;color:var(--primary)">{{ cd.exams }}</div>
+                    <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">Exams</div>
+                </div>
+                <div style="text-align:center;padding:12px;background:#f8fafc;border-radius:8px">
+                    <div style="font-size:22px;font-weight:700;color:{% if cd.average >= 50 %}var(--success){% else %}var(--danger){% endif %}">{{ cd.average }}%</div>
+                    <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">Class Avg</div>
+                </div>
+            </div>
+            {% if cd.latest_exam %}
+            <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px">
+                Latest: <strong style="color:var(--text)">{{ cd.latest_exam.name }}</strong>
+            </div>
+            {% endif %}
+            <div class="flex gap-2">
+                <a href="{% url 'class_access' cd.class.id %}" class="btn btn-primary btn-sm w-full"><i class="fas fa-chart-bar"></i> View Results</a>
+                {% if cd.latest_exam %}
+                <a href="{% url 'enter_marks' cd.latest_exam.pk %}" class="btn btn-light btn-sm"><i class="fas fa-edit"></i></a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Recent Exams -->
+<div class="card">
+    <div class="card-header"><h3><i class="fas fa-clipboard-list" style="color:var(--primary)"></i> My Recent Exams</h3>
+        <a href="{% url 'exam_list' %}" class="btn btn-light btn-sm">All Exams</a></div>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Exam</th><th>Class</th><th>Type</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>{% for exam in my_exams %}
+        <tr>
+            <td style="font-weight:700">{{ exam.name }}</td>
+            <td>{{ exam.classroom }}</td>
+            <td><span class="badge badge-info">{{ exam.get_exam_type_display }}</span></td>
+            <td style="font-size:12px;color:var(--text-muted)">{{ exam.start_date|date:"d M Y" }}</td>
+            <td>{% if exam.is_published %}<span class="badge badge-success">Published</span>{% else %}<span class="badge badge-warning">Draft</span>{% endif %}</td>
+            <td class="flex gap-2">
+                <a href="{% url 'enter_marks' exam.pk %}" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i> Marks</a>
+                <a href="{% url 'subject_analysis' exam.pk %}" class="btn btn-sm btn-info"><i class="fas fa-chart-pie"></i></a>
+            </td>
+        </tr>
+        {% empty %}<tr><td colspan="6" class="text-center text-muted" style="padding:20px">No exams recorded yet</td></tr>{% endfor %}
+        </tbody>
+    </table></div>
+</div>
+{% endif %}
+{% endblock %}

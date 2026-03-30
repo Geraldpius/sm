@@ -1,0 +1,41 @@
+{% extends "base/base.html" %}
+{% load humanize %}
+{% block title %}Fees Overview{% endblock %}
+{% block breadcrumb %}<span class="current">Fees Overview</span>{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div><h1>Fees Overview</h1><p>Term {{ term }}, {{ year }}</p></div>
+    <div class="flex gap-2">
+        <a href="{% url 'record_payment' %}" class="btn btn-success"><i class="fas fa-money-bill-wave"></i> Record Payment</a>
+        <a href="{% url 'fee_defaulters' %}" class="btn btn-danger btn-sm"><i class="fas fa-exclamation-circle"></i> Defaulters</a>
+    </div>
+</div>
+<div class="stats-grid">
+    <div class="stat-card green"><div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div><div class="stat-info"><h3>{{ currency }} {{ total_collected|intcomma }}</h3><p>Total Collected</p></div></div>
+    <div class="stat-card red"><div class="stat-icon"><i class="fas fa-balance-scale"></i></div><div class="stat-info"><h3>{{ currency }} {{ total_balance|intcomma }}</h3><p>Total Balance</p></div></div>
+    <div class="stat-card blue"><div class="stat-icon"><i class="fas fa-percent"></i></div><div class="stat-info"><h3>{{ collection_rate }}%</h3><p>Collection Rate</p><div class="progress-bar" style="margin-top:6px"><div class="progress-fill" style="width:{{ collection_rate }}%"></div></div></div></div>
+</div>
+<div class="card">
+    <div class="card-header"><h3>Class-wise Collection</h3></div>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Class</th><th>Students</th><th>Expected</th><th>Collected</th><th>Balance</th><th>Rate</th></tr></thead>
+        <tbody>
+        {% for row in summary %}
+        <tr>
+            <td><a href="{% url 'class_access' row.class.id %}" style="font-weight:600;color:var(--primary)">{{ row.class.display_name }}</a></td>
+            <td>{{ row.students }}</td>
+            <td>{{ currency }} {{ row.expected|intcomma }}</td>
+            <td style="color:var(--success);font-weight:600">{{ currency }} {{ row.collected|intcomma }}</td>
+            <td style="color:{% if row.balance > 0 %}var(--danger){% else %}var(--success){% endif %};font-weight:600">{{ currency }} {{ row.balance|intcomma }}</td>
+            <td>
+                <div class="progress-bar" style="width:80px;margin-bottom:2px">
+                    <div class="progress-fill" style="width:{{ row.rate }}%;background:{% if row.rate >= 80 %}var(--success){% elif row.rate >= 50 %}var(--warning){% else %}var(--danger){% endif %}"></div>
+                </div>
+                <small style="font-size:11px">{{ row.rate }}%</small>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table></div>
+</div>
+{% endblock %}

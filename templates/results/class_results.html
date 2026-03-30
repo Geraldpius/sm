@@ -1,0 +1,77 @@
+{% extends "base/base.html" %}
+{% load humanize %}
+{% block title %}{{ classroom.display_name }} Results{% endblock %}
+{% block breadcrumb %}<a href="{% url 'exam_list' %}">Exams</a><span class="sep">/</span><span class="current">{{ classroom.display_name }} Results</span>{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div><h1>{{ classroom.display_name }} — Results</h1><p>{{ year }}, Term {{ term }}</p></div>
+    <div class="flex gap-2">
+        {% if selected_exam %}<a href="{% url 'subject_analysis' selected_exam.pk %}" class="btn btn-info btn-sm"><i class="fas fa-chart-pie"></i> Analysis</a>{% endif %}
+        <a href="{% url 'create_exam' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> New Exam</a>
+    </div>
+</div>
+{% if exams %}
+<div class="card mb-4">
+    <div class="card-body" style="padding:12px 20px">
+        <strong style="font-size:13px">Select Exam:</strong>
+        <div class="flex gap-2" style="margin-top:8px;flex-wrap:wrap">
+        {% for exam in exams %}
+        <a href="?exam_id={{ exam.pk }}&year={{ year }}&term={{ term }}" class="btn btn-sm {% if selected_exam and selected_exam.pk == exam.pk %}btn-primary{% else %}btn-light{% endif %}">{{ exam.name }}</a>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% if selected_exam and results_table %}
+<div class="card">
+    <div class="card-header">
+        <h3>{{ selected_exam.name }} — Class Performance</h3>
+        <span class="badge badge-info">{{ results_table|length }} Students</span>
+    </div>
+    <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead>
+            <tr style="background:var(--primary);color:#fff">
+                <th style="padding:10px 12px;white-space:nowrap;position:sticky;left:0;background:var(--primary)">#&nbsp; Student</th>
+                {% for subject in subjects %}<th style="padding:10px 8px;text-align:center;min-width:60px;white-space:nowrap">{{ subject.code }}</th>{% endfor %}
+                <th style="padding:10px 12px;text-align:center">Avg%</th>
+                <th style="padding:10px 12px;text-align:center">Agg</th>
+                <th style="padding:10px 12px;text-align:center">Pos</th>
+                <th style="padding:10px 12px">Report</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for row in results_table %}
+        <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:8px 12px;font-weight:600;position:sticky;left:0;background:#fff;border-right:1px solid var(--border);white-space:nowrap">
+                <span style="color:var(--text-muted);margin-right:6px;font-size:11px">{{ forloop.counter }}</span>{{ row.student.full_name }}
+            </td>
+            {% for subject in subjects %}
+            {% with r=row.results|default:'' %}
+            <td style="padding:6px 8px;text-align:center">
+                {% for sk, sv in row.results.items %}{% if sk == subject.pk %}
+                    <span style="font-weight:700">{{ sv.marks|floatformat:0 }}</span>
+                    <br><span class="grade-{{ sv.grade|lower }}" style="font-size:11px">{{ sv.grade }}</span>
+                {% endif %}{% endfor %}
+            </td>
+            {% endwith %}
+            {% endfor %}
+            <td style="padding:6px 12px;text-align:center;font-weight:700;color:{% if row.report and row.report.average >= 50 %}var(--success){% else %}var(--danger){% endif %}">
+                {% if row.report %}{{ row.report.average|floatformat:1 }}%{% else %}—{% endif %}
+            </td>
+            <td style="padding:6px 12px;text-align:center;font-weight:700">{% if row.report %}{{ row.report.aggregate }}{% else %}—{% endif %}</td>
+            <td style="padding:6px 12px;text-align:center">{% if row.report %}<strong>{{ row.report.position }}</strong>{% else %}—{% endif %}</td>
+            <td style="padding:6px 12px"><a href="{% url 'student_report' row.student.pk selected_exam.pk %}" class="btn btn-sm btn-primary" target="_blank"><i class="fas fa-file-alt"></i></a></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% elif not exams %}
+<div class="card"><div class="card-body" style="text-align:center;padding:60px;color:var(--text-muted)">
+    <i class="fas fa-clipboard-list" style="font-size:48px;display:block;margin-bottom:16px"></i>
+    No exams created for this class yet. <a href="{% url 'create_exam' %}">Create an exam</a>
+</div></div>
+{% endif %}
+{% endblock %}

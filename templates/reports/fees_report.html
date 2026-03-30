@@ -1,0 +1,19 @@
+{% extends "base/base.html" %}
+{% load humanize %}
+{% block title %}Fees Report{% endblock %}
+{% block breadcrumb %}<a href="{% url 'reports_home' %}">Reports</a><span class="sep">/</span><span class="current">Fees Report</span>{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>Fees Report</h1><p>Term {{ term }}, {{ year }}</p></div>
+<div class="flex gap-2"><button onclick="window.print()" class="btn btn-light btn-sm no-print"><i class="fas fa-print"></i> Print</button><a href="{% url 'export_report_csv' 'fees' %}?year={{ year }}&term={{ term }}" class="btn btn-light btn-sm no-print"><i class="fas fa-file-csv"></i> Export</a></div></div>
+<div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="stat-card green"><div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div><div class="stat-info"><h3>{{ currency }} {{ total_collected|intcomma }}</h3><p>Total Collected</p></div></div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+<div class="card"><div class="card-header"><h3>Collection by Payment Method</h3></div>
+<div class="table-wrap"><table><thead><tr><th>Method</th><th>Transactions</th><th>Total ({{ currency }})</th></tr></thead>
+<tbody>{% for m in by_method %}<tr><td>{{ m.payment_method|title }}</td><td>{{ m.count }}</td><td style="font-weight:700;color:var(--success)">{{ m.total|intcomma }}</td></tr>{% endfor %}</tbody></table></div></div>
+<div class="card"><div class="card-header"><h3>Collection by Class</h3></div>
+<div class="table-wrap"><table><thead><tr><th>Class</th><th>Collected ({{ currency }})</th></tr></thead>
+<tbody>{% for c in by_class %}<tr><td style="font-weight:600">{{ c.class.display_name }}</td><td style="font-weight:700;color:var(--success)">{{ c.collected|intcomma }}</td></tr>{% endfor %}</tbody></table></div></div>
+</div>
+{% endblock %}

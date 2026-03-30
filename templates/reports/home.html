@@ -1,0 +1,56 @@
+{% extends "base/base.html" %}
+{% block title %}Reports{% endblock %}
+{% block breadcrumb %}<span class="current">Reports</span>{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>Reports & Analytics</h1><p>Generate comprehensive reports for your school</p></div></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px">
+    <div class="card">
+        <div class="card-body" style="text-align:center;padding:32px 20px">
+            <div style="font-size:48px;color:var(--primary);margin-bottom:16px"><i class="fas fa-users"></i></div>
+            <h3 style="margin-bottom:8px">Enrollment Report</h3>
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Student enrollment statistics by class, gender, and boarding status</p>
+            <a href="{% url 'enrollment_report' %}" class="btn btn-primary w-full">View Report</a>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body" style="text-align:center;padding:32px 20px">
+            <div style="font-size:48px;color:var(--success);margin-bottom:16px"><i class="fas fa-money-bill-wave"></i></div>
+            <h3 style="margin-bottom:8px">Fees Report</h3>
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Fee collection analysis, payment trends, and defaulters summary</p>
+            <a href="{% url 'fees_report' %}" class="btn btn-success w-full">View Report</a>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body" style="text-align:center;padding:32px 20px">
+            <div style="font-size:48px;color:var(--accent);margin-bottom:16px"><i class="fas fa-graduation-cap"></i></div>
+            <h3 style="margin-bottom:8px">Academic Report</h3>
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Class performance, subject analysis, and top students</p>
+            <a href="{% url 'academic_report' %}" class="btn btn-warning w-full">View Report</a>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body" style="text-align:center;padding:32px 20px">
+            <div style="font-size:48px;color:var(--info);margin-bottom:16px"><i class="fas fa-exclamation-triangle"></i></div>
+            <h3 style="margin-bottom:8px">Fee Defaulters</h3>
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Detailed list of students with outstanding fee balances</p>
+            <a href="{% url 'fee_defaulters' %}" class="btn btn-info w-full">View Defaulters</a>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body" style="text-align:center;padding:32px 20px">
+            <div style="font-size:48px;color:var(--danger);margin-bottom:16px"><i class="fas fa-file-csv"></i></div>
+            <h3 style="margin-bottom:8px">Export Data</h3>
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Export students, fees, and other data to CSV/Excel</p>
+            <a href="{% url 'export_students_csv' %}" class="btn btn-danger w-full">Export Students CSV</a>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body" style="text-align:center;padding:32px 20px">
+            <div style="font-size:48px;color:#6366f1;margin-bottom:16px"><i class="fas fa-tasks"></i></div>
+            <h3 style="margin-bottom:8px">Requirements Report</h3>
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Term requirements compliance per student and class</p>
+            <a href="{% url 'requirements_report' %}" class="btn btn-outline w-full">View Report</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

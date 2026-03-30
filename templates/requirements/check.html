@@ -1,0 +1,33 @@
+{% extends "base/base.html" %}
+{% block title %}Check Requirements - {{ classroom }}{% endblock %}
+{% block breadcrumb %}<a href="{% url 'requirements_list' %}">Requirements</a><span class="sep">/</span><span class="current">{{ classroom.display_name }}</span>{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>Check Requirements: {{ classroom.display_name }}</h1></div></div>
+<form method="post">{% csrf_token %}
+<div class="card">
+    <div class="card-header"><h3>{{ requirements|length }} items to check for {{ students|length }} students</h3><button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Status</button></div>
+    <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr style="background:var(--primary);color:#fff"><th style="padding:10px 12px;position:sticky;left:0;background:var(--primary)">Student</th>{% for req in requirements %}<th style="padding:10px 8px;text-align:center;min-width:100px;white-space:nowrap">{{ req.item_name|truncatechars:15 }}</th>{% endfor %}</tr></thead>
+        <tbody>{% for student in students %}
+        <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:8px 12px;font-weight:600;position:sticky;left:0;background:#fff;white-space:nowrap">{{ student.full_name }}</td>
+            {% for req in requirements %}
+            {% with sk=student.pk rk=req.pk %}
+            <td style="padding:4px 6px;text-align:center">
+                <select name="status_{{ sk }}_{{ rk }}" style="font-size:11px;padding:3px;border:1px solid var(--border);border-radius:4px;width:90px">
+                    <option value="brought" {% with key=sk,rk %}{% for sk2,rk2 in status_map %}{% if sk2 == sk and rk2 == rk and status_map|default:'' %}{% endif %}{% endfor %}{% endwith %}>Brought</option>
+                    <option value="partial">Partial</option>
+                    <option value="missing" selected>Missing</option>
+                    <option value="waived">Waived</option>
+                </select>
+            </td>
+            {% endwith %}
+            {% endfor %}
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table></div>
+    <div class="card-footer"><button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save All</button></div>
+</div>
+</form>
+{% endblock %}

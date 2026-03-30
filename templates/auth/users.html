@@ -1,0 +1,257 @@
+{% extends "base/base.html" %}
+{% block title %}Manage Users{% endblock %}
+{% block breadcrumb %}<span class="current">Manage Users</span>{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div><h1>Manage Users</h1><p>{{ users.count }} user account{{ users.count|pluralize }}</p></div>
+    <button onclick="openModal('addUserModal')" class="btn btn-primary"><i class="fas fa-user-plus"></i> Add User</button>
+</div>
+
+<div class="card">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>#</th><th>Name</th><th>Username</th><th>Role</th><th>Phone</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td style="color:var(--text-muted)">{{ forloop.counter }}</td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:10px">
+                            <div class="avatar-sm" style="background:
+                                {% if user.profile.role == 'admin' %}#fff8e1{% elif user.profile.role == 'bursar' %}#e8f5e9
+                                {% elif user.profile.role == 'dos' %}#e0f7fa{% elif user.profile.role == 'headteacher' %}#f3e8ff
+                                {% else %}#e8f0fe{% endif %};color:var(--primary)">
+                                {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                            </div>
+                            <div>
+                                <div style="font-weight:600">{{ user.get_full_name|default:user.username }}</div>
+                                <div style="font-size:11px;color:var(--text-muted)">{{ user.email|default:"No email" }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td><code style="background:#f0f4f8;padding:2px 7px;border-radius:4px;font-size:12px">{{ user.username }}</code></td>
+                    <td>
+                        {% if user.profile %}
+                        <span class="badge
+                            {% if user.profile.role == 'admin' %}badge-warning
+                            {% elif user.profile.role == 'bursar' %}badge-success
+                            {% elif user.profile.role == 'dos' %}badge-info
+                            {% elif user.profile.role == 'headteacher' %}badge-primary
+                            {% elif user.profile.role == 'teacher' %}badge-secondary
+                            {% else %}badge-secondary{% endif %}">
+                            <i class="fas fa-{% if user.profile.role == 'admin' %}crown{% elif user.profile.role == 'bursar' %}coins{% elif user.profile.role == 'dos' %}graduation-cap{% elif user.profile.role == 'headteacher' %}user-tie{% elif user.profile.role == 'teacher' %}chalkboard-teacher{% else %}user{% endif %}" style="margin-right:3px"></i>
+                            {{ user.profile.get_role_display }}
+                        </span>
+                        {% else %}<span class="badge badge-secondary">No Role</span>{% endif %}
+                    </td>
+                    <td style="font-size:13px">{{ user.profile.phone|default:"—" }}</td>
+                    <td>
+                        {% if user.is_active %}
+                        <span class="badge badge-success"><i class="fas fa-circle" style="font-size:8px"></i> Active</span>
+                        {% else %}
+                        <span class="badge badge-danger"><i class="fas fa-circle" style="font-size:8px"></i> Inactive</span>
+                        {% endif %}
+                        {% if user.is_superuser %}<span class="badge badge-warning" style="margin-left:4px">Superuser</span>{% endif %}
+                    </td>
+                    <td>
+                        <div class="flex gap-2">
+                            <!-- Edit -->
+                            <button onclick="openEditModal({{ user.pk }},'{{ user.first_name }}','{{ user.last_name }}','{{ user.email }}','{{ user.profile.role|default:'teacher' }}','{{ user.profile.phone|default:'' }}')"
+                                class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></button>
+                            <!-- Toggle active -->
+                            <form method="post" style="display:inline">{% csrf_token %}
+                                <input type="hidden" name="action" value="toggle">
+                                <input type="hidden" name="user_id" value="{{ user.pk }}">
+                                <button class="btn btn-sm {% if user.is_active %}btn-light{% else %}btn-success{% endif %}"
+                                    title="{% if user.is_active %}Deactivate{% else %}Activate{% endif %}"
+                                    onclick="return confirm('{% if user.is_active %}Deactivate{% else %}Activate{% endif %} {{ user.get_full_name }}?')">
+                                    <i class="fas fa-{% if user.is_active %}ban{% else %}check{% endif %}"></i>
+                                </button>
+                            </form>
+                            <!-- Reset Password -->
+                            <button onclick="openResetModal({{ user.pk }},'{{ user.get_full_name|default:user.username }}')"
+                                class="btn btn-sm btn-info" title="Reset Password"><i class="fas fa-key"></i></button>
+                            <!-- Delete -->
+                            {% if not user.is_superuser and user != request.user %}
+                            <form method="post" style="display:inline">{% csrf_token %}
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="user_id" value="{{ user.pk }}">
+                                <button class="btn btn-sm btn-danger" title="Delete"
+                                    onclick="return confirm('Permanently delete {{ user.get_full_name|default:user.username }}? This cannot be undone.')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="text-center text-muted" style="padding:40px">No users found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ── ADD USER MODAL ── -->
+<div class="modal-overlay" id="addUserModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3><i class="fas fa-user-plus" style="color:var(--primary)"></i> Add New User</h3>
+            <button class="modal-close" onclick="closeModal('addUserModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">First Name <span class="req">*</span></label>
+                        <input type="text" name="first_name" class="form-control" required placeholder="e.g. John">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Last Name <span class="req">*</span></label>
+                        <input type="text" name="last_name" class="form-control" required placeholder="e.g. Doe">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Username <span class="req">*</span></label>
+                        <input type="text" name="username" class="form-control" required placeholder="e.g. jdoe" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password <span class="req">*</span></label>
+                        <input type="password" name="password" class="form-control" required placeholder="Min 6 characters" autocomplete="new-password">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Role <span class="req">*</span></label>
+                        <select name="role" class="form-control">
+                            <option value="teacher">Teacher</option>
+                            <option value="bursar">Bursar</option>
+                            <option value="dos">Director of Studies</option>
+                            <option value="headteacher">Head Teacher</option>
+                            <option value="receptionist">Receptionist</option>
+                            <option value="admin">Administrator</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Phone</label>
+                        <input type="text" name="phone" class="form-control" placeholder="+256 700 000 000">
+                    </div>
+                    <div class="form-group" style="grid-column:1/-1">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" placeholder="user@school.ac.ug">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeModal('addUserModal')" class="btn btn-light">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Create User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ── EDIT USER MODAL ── -->
+<div class="modal-overlay" id="editUserModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3><i class="fas fa-edit" style="color:var(--warning)"></i> Edit User</h3>
+            <button class="modal-close" onclick="closeModal('editUserModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="edit">
+                <input type="hidden" name="user_id" id="editUserId">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">First Name</label>
+                        <input type="text" name="first_name" id="editFirstName" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Last Name</label>
+                        <input type="text" name="last_name" id="editLastName" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" id="editEmail" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Role</label>
+                        <select name="role" id="editRole" class="form-control">
+                            <option value="teacher">Teacher</option>
+                            <option value="bursar">Bursar</option>
+                            <option value="dos">Director of Studies</option>
+                            <option value="headteacher">Head Teacher</option>
+                            <option value="receptionist">Receptionist</option>
+                            <option value="admin">Administrator</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Phone</label>
+                        <input type="text" name="phone" id="editPhone" class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeModal('editUserModal')" class="btn btn-light">Cancel</button>
+                    <button type="submit" class="btn btn-warning"><i class="fas fa-save"></i> Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ── RESET PASSWORD MODAL ── -->
+<div class="modal-overlay" id="resetPwdModal">
+    <div class="modal" style="max-width:420px">
+        <div class="modal-header">
+            <h3><i class="fas fa-key" style="color:var(--info)"></i> Reset Password</h3>
+            <button class="modal-close" onclick="closeModal('resetPwdModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">
+                Resetting password for: <strong id="resetUserName"></strong>
+            </p>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="reset_password">
+                <input type="hidden" name="user_id" id="resetUserId">
+                <div class="form-group">
+                    <label class="form-label">New Password <span class="req">*</span></label>
+                    <input type="password" name="new_password" class="form-control" required
+                        placeholder="Min 6 characters" autocomplete="new-password">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" onclick="closeModal('resetPwdModal')" class="btn btn-light">Cancel</button>
+                    <button type="submit" class="btn btn-info"><i class="fas fa-key"></i> Reset Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openEditModal(id, firstName, lastName, email, role, phone) {
+    document.getElementById('editUserId').value    = id;
+    document.getElementById('editFirstName').value = firstName;
+    document.getElementById('editLastName').value  = lastName;
+    document.getElementById('editEmail').value     = email;
+    document.getElementById('editPhone').value     = phone;
+    const roleSelect = document.getElementById('editRole');
+    for (let opt of roleSelect.options) {
+        opt.selected = (opt.value === role);
+    }
+    openModal('editUserModal');
+}
+
+function openResetModal(id, name) {
+    document.getElementById('resetUserId').value  = id;
+    document.getElementById('resetUserName').textContent = name;
+    openModal('resetPwdModal');
+}
+</script>
+{% endblock %}

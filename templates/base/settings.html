@@ -1,0 +1,156 @@
+{% extends "base/base.html" %}
+{% block title %}School Settings{% endblock %}
+{% block breadcrumb %}<span class="current">School Settings</span>{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div><h1>School Settings</h1><p>Customize your school's information and grading scale</p></div>
+</div>
+
+<form method="post" enctype="multipart/form-data">
+{% csrf_token %}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+
+<div>
+    <div class="card mb-4">
+        <div class="card-header"><h3><i class="fas fa-school" style="color:var(--primary)"></i> Basic Information</h3></div>
+        <div class="card-body">
+            <div class="form-group">
+                <label class="form-label">School Name <span class="req">*</span></label>
+                <input type="text" name="name" class="form-control" value="{{ school.name }}" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">School Motto</label>
+                <input type="text" name="motto" class="form-control" value="{{ school.motto }}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">District / Location</label>
+                <input type="text" name="district" class="form-control" value="{{ school.district }}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Full Address</label>
+                <textarea name="address" class="form-control" rows="2">{{ school.address }}</textarea>
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Phone</label>
+                    <input type="text" name="phone" class="form-control" value="{{ school.phone }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" class="form-control" value="{{ school.email }}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Website</label>
+                <input type="url" name="website" class="form-control" value="{{ school.website }}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Year Founded</label>
+                <input type="number" name="founded_year" class="form-control" value="{{ school.founded_year }}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">School Logo</label>
+                {% if school.logo %}
+                <div style="margin-bottom:8px"><img src="{{ school.logo.url }}" style="height:60px;border-radius:8px"></div>
+                {% endif %}
+                <input type="file" name="logo" class="form-control" accept="image/*">
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><h3><i class="fas fa-calendar-alt" style="color:var(--accent)"></i> Academic Period</h3></div>
+        <div class="card-body">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Current Academic Year</label>
+                    <input type="number" name="current_year" class="form-control" value="{{ school.current_year }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Current Term</label>
+                    <select name="current_term" class="form-control">
+                        <option value="1" {% if school.current_term == 1 %}selected{% endif %}>Term 1</option>
+                        <option value="2" {% if school.current_term == 2 %}selected{% endif %}>Term 2</option>
+                        <option value="3" {% if school.current_term == 3 %}selected{% endif %}>Term 3</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Currency</label>
+                    <input type="text" name="currency" class="form-control" value="{{ school.currency }}" placeholder="UGX">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div>
+    <div class="card">
+        <div class="card-header"><h3><i class="fas fa-star" style="color:var(--warning)"></i> Grading Scale (UNEB Style)</h3></div>
+        <div class="card-body">
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Set the minimum percentage for each grade. This applies school-wide.</p>
+            <table style="width:100%;font-size:13.5px">
+                <thead>
+                    <tr>
+                        <th style="padding:8px;background:#f8fafc;border-bottom:2px solid var(--border);text-align:left">Grade</th>
+                        <th style="padding:8px;background:#f8fafc;border-bottom:2px solid var(--border);text-align:left">Label</th>
+                        <th style="padding:8px;background:#f8fafc;border-bottom:2px solid var(--border);text-align:left">Min %</th>
+                        <th style="padding:8px;background:#f8fafc;border-bottom:2px solid var(--border);text-align:left">Points</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding:8px"><span class="badge" style="background:#c8e6c9;color:#1b5e20;font-size:14px">A</span></td>
+                        <td style="padding:8px">Distinction</td>
+                        <td style="padding:8px"><input type="number" name="grade_a_min" class="form-control" style="max-width:80px" value="{{ school.grade_a_min }}" min="0" max="100"></td>
+                        <td style="padding:8px;font-weight:700">1</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:8px"><span class="badge" style="background:#bbdefb;color:#0d47a1;font-size:14px">B</span></td>
+                        <td style="padding:8px">Merit</td>
+                        <td style="padding:8px"><input type="number" name="grade_b_min" class="form-control" style="max-width:80px" value="{{ school.grade_b_min }}" min="0" max="100"></td>
+                        <td style="padding:8px;font-weight:700">2</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:8px"><span class="badge" style="background:#e1bee7;color:#4a148c;font-size:14px">C</span></td>
+                        <td style="padding:8px">Credit</td>
+                        <td style="padding:8px"><input type="number" name="grade_c_min" class="form-control" style="max-width:80px" value="{{ school.grade_c_min }}" min="0" max="100"></td>
+                        <td style="padding:8px;font-weight:700">3</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:8px"><span class="badge" style="background:#ffe0b2;color:#bf360c;font-size:14px">D</span></td>
+                        <td style="padding:8px">Pass</td>
+                        <td style="padding:8px"><input type="number" name="grade_d_min" class="form-control" style="max-width:80px" value="{{ school.grade_d_min }}" min="0" max="100"></td>
+                        <td style="padding:8px;font-weight:700">4</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:8px"><span class="badge" style="background:#ffcdd2;color:#b71c1c;font-size:14px">E</span></td>
+                        <td style="padding:8px">Pass</td>
+                        <td style="padding:8px"><input type="number" name="grade_e_min" class="form-control" style="max-width:80px" value="{{ school.grade_e_min }}" min="0" max="100"></td>
+                        <td style="padding:8px;font-weight:700">5</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:8px"><span class="badge" style="background:#ffcdd2;color:#b71c1c;font-size:14px">F</span></td>
+                        <td style="padding:8px">Fail</td>
+                        <td style="padding:8px"><input type="number" name="grade_f_min" class="form-control" style="max-width:80px" value="{{ school.grade_f_min }}" min="0" max="100"></td>
+                        <td style="padding:8px;font-weight:700">6</td>
+                    </tr>
+                    <tr>
+                        <td style="padding:8px"><span class="badge badge-secondary" style="font-size:14px">U</span></td>
+                        <td style="padding:8px">Ungraded</td>
+                        <td style="padding:8px"><span style="color:var(--text-muted);font-size:13px">Below F min</span></td>
+                        <td style="padding:8px;font-weight:700">9</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<div style="margin-top:20px;display:flex;justify-content:flex-end;gap:12px">
+    <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-save"></i> Save Settings</button>
+</div>
+</form>
+{% endblock %}

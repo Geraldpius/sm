@@ -1,0 +1,109 @@
+{% extends "base/base.html" %}
+{% load humanize %}
+{% block title %}Fee Defaulters{% endblock %}
+{% block breadcrumb %}<a href="{% url 'fees_dashboard' %}">Fees</a><span class="sep">/</span><span class="current">Defaulters</span>{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div><h1>Fee Defaulters</h1><p>{{ total_defaulters }} students with outstanding fees — Term {{ term }}, {{ year }}</p></div>
+    <div class="flex gap-2">
+        <a href="{% url 'export_defaulters_csv' %}?year={{ year }}&term={{ term }}&class_id={{ class_filter }}" class="btn btn-light btn-sm"><i class="fas fa-file-csv"></i> Export CSV</a>
+        <button onclick="window.print()" class="btn btn-light btn-sm no-print"><i class="fas fa-print"></i> Print</button>
+    </div>
+</div>
+
+<div class="card mb-4 no-print">
+    <div class="card-body">
+        <form method="get" class="flex gap-2 flex-wrap items-center">
+            <select name="year" class="form-control" style="max-width:120px">
+                <option value="2022" {% if year == 2022 %}selected{% endif %}>2022</option>
+                <option value="2023" {% if year == 2023 %}selected{% endif %}>2023</option>
+                <option value="2024" {% if year == 2024 %}selected{% endif %}>2024</option>
+                <option value="2025" {% if year == 2025 %}selected{% endif %}>2025</option>
+                <option value="2026" {% if year == 2026 %}selected{% endif %}>2026</option>
+            </select>
+            <select name="term" class="form-control" style="max-width:120px">
+                <option value="1" {% if term == 1 %}selected{% endif %}>Term 1</option>
+                <option value="2" {% if term == 2 %}selected{% endif %}>Term 2</option>
+                <option value="3" {% if term == 3 %}selected{% endif %}>Term 3</option>
+            </select>
+            <select name="class_id" class="form-control" style="max-width:160px">
+                <option value="">All Classes</option>
+                {% for cls in classes %}
+                <option value="{{ cls.id }}" {% if class_filter == cls.id|stringformat:"s" %}selected{% endif %}>{{ cls.display_name }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-filter"></i> Filter</button>
+        </form>
+    </div>
+</div>
+
+<div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="stat-card red">
+        <div class="stat-icon"><i class="fas fa-users"></i></div>
+        <div class="stat-info"><h3>{{ total_defaulters }}</h3><p>Students with Balance</p></div>
+    </div>
+    <div class="stat-card gold">
+        <div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div>
+        <div class="stat-info"><h3>{{ currency }} {{ total_balance|intcomma }}</h3><p>Total Outstanding</p></div>
+    </div>
+    <div class="stat-card blue">
+        <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
+        <div class="stat-info"><h3>Term {{ term }}, {{ year }}</h3><p>Reporting Period</p></div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><h3><i class="fas fa-exclamation-triangle" style="color:var(--danger)"></i> Students with Outstanding Fees</h3></div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Student</th>
+                    <th>Class</th>
+                    <th>Expected</th>
+                    <th>Paid</th>
+                    <th>Balance</th>
+                    <th>% Paid</th>
+                    <th>Guardian Contact</th>
+                    <th class="no-print">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in defaulters %}
+                <tr>
+                    <td style="color:var(--text-muted)">{{ forloop.counter }}</td>
+                    <td>
+                        <div style="font-weight:600">{{ d.student.full_name }}</div>
+                        <div style="font-size:11px;color:var(--text-muted)">{{ d.student.student_id }}</div>
+                    </td>
+                    <td>{{ d.student.current_class|default:"—" }}</td>
+                    <td>{{ currency }} {{ d.expected|intcomma }}</td>
+                    <td style="color:var(--success);font-weight:600">{{ currency }} {{ d.paid|intcomma }}</td>
+                    <td style="color:var(--danger);font-weight:700">{{ currency }} {{ d.balance|intcomma }}</td>
+                    <td>
+                        <div class="progress-bar" style="width:80px;margin-bottom:3px">
+                            <div class="progress-fill" style="width:{{ d.percentage_paid }}%;background:{% if d.percentage_paid >= 75 %}var(--success){% elif d.percentage_paid >= 50 %}var(--warning){% else %}var(--danger){% endif %}"></div>
+                        </div>
+                        <small style="font-size:11px;color:var(--text-muted)">{{ d.percentage_paid }}%</small>
+                    </td>
+                    <td style="font-size:13px">{{ d.student.guardian_phone|default:d.student.father_phone|default:"—" }}</td>
+                    <td class="no-print">
+                        <a href="{% url 'record_payment' %}?student_id={{ d.student.pk }}" class="btn btn-sm btn-success" title="Record Payment"><i class="fas fa-money-bill-wave"></i></a>
+                        <a href="{% url 'student_detail' d.student.pk %}" class="btn btn-sm btn-primary" title="View Student"><i class="fas fa-eye"></i></a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" style="text-align:center;padding:40px;color:var(--success)">
+                        <i class="fas fa-check-circle" style="font-size:36px;display:block;margin-bottom:10px"></i>
+                        No defaulters! All students are up to date.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

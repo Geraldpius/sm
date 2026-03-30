@@ -1,0 +1,22 @@
+{% extends "base/base.html" %}
+{% block title %}Requirements Report{% endblock %}
+{% block breadcrumb %}<a href="{% url 'requirements_list' %}">Requirements</a><span class="sep">/</span><span class="current">Report</span>{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>Requirements Compliance Report</h1></div><button onclick="window.print()" class="btn btn-light btn-sm no-print"><i class="fas fa-print"></i> Print</button></div>
+<div class="card"><div class="table-wrap"><table>
+    <thead><tr><th>Student</th><th>Class</th><th>Total Items</th><th>Brought</th><th>Missing</th><th>%</th></tr></thead>
+    <tbody>{% for d in data %}
+    <tr>
+        <td style="font-weight:600">{{ d.student.full_name }}</td>
+        <td>{{ d.student.current_class|default:"—" }}</td>
+        <td>{{ d.total }}</td>
+        <td style="color:var(--success);font-weight:700">{{ d.brought }}</td>
+        <td style="color:{% if d.missing > 0 %}var(--danger){% else %}var(--success){% endif %};font-weight:700">{{ d.missing }}</td>
+        <td>
+            <div class="progress-bar" style="width:70px;margin-bottom:2px"><div class="progress-fill" style="width:{{ d.percentage }}%;background:{% if d.percentage >= 80 %}var(--success){% elif d.percentage >= 50 %}var(--warning){% else %}var(--danger){% endif %}"></div></div>
+            <small>{{ d.percentage }}%</small>
+        </td>
+    </tr>
+    {% empty %}<tr><td colspan="6" class="text-center text-muted" style="padding:30px">No data available</td></tr>{% endfor %}</tbody>
+</table></div></div>
+{% endblock %}

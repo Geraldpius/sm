@@ -1,0 +1,47 @@
+{% extends "base/base.html" %}
+{% block title %}Term Requirements{% endblock %}
+{% block breadcrumb %}<span class="current">Requirements</span>{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>Term Requirements</h1><p>Items students must bring at the beginning of term</p></div>
+<div class="flex gap-2"><button onclick="openModal('addReqModal')" class="btn btn-primary"><i class="fas fa-plus"></i> Add Item</button></div></div>
+<div class="card">
+    <div class="card-header">
+        <form method="get" class="flex gap-2">
+            <select name="class_id" class="form-control" style="max-width:160px"><option value="">All Classes</option>{% for cls in classes %}<option value="{{ cls.id }}" {% if class_filter == cls.id|stringformat:"s" %}selected{% endif %}>{{ cls.display_name }}</option>{% endfor %}</select>
+            <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+        </form>
+        <div class="flex gap-2">
+            {% for cls in classes %}<a href="{% url 'check_requirements' cls.id %}" class="btn btn-sm btn-outline"><i class="fas fa-check-square"></i> Check {{ cls.display_name }}</a>{% endfor %}
+        </div>
+    </div>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Item</th><th>Category</th><th>Class</th><th>Qty</th><th>Est. Cost</th><th>Required</th></tr></thead>
+        <tbody>{% for req in requirements %}
+        <tr>
+            <td style="font-weight:600">{{ req.item_name }}</td>
+            <td><span class="badge badge-info">{{ req.get_category_display }}</span></td>
+            <td>{{ req.classroom|default:"All Classes" }}</td>
+            <td>{{ req.quantity }} {{ req.unit }}</td>
+            <td>{{ currency }} {{ req.estimated_cost }}</td>
+            <td>{% if req.is_mandatory %}<span class="badge badge-danger">Required</span>{% else %}<span class="badge badge-secondary">Optional</span>{% endif %}</td>
+        </tr>
+        {% empty %}<tr><td colspan="6" class="text-center text-muted" style="padding:30px">No requirements defined yet.</td></tr>{% endfor %}</tbody>
+    </table></div>
+</div>
+<div class="modal-overlay" id="addReqModal">
+<div class="modal"><div class="modal-header"><h3>Add Requirement</h3><button class="modal-close" onclick="closeModal('addReqModal')">×</button></div>
+<form method="post" action="{% url 'add_requirement' %}"><div class="modal-body">{% csrf_token %}
+<div class="form-grid">
+    <div class="form-group"><label class="form-label">Item Name</label><input type="text" name="item_name" class="form-control" required placeholder="e.g. Exercise book"></div>
+    <div class="form-group"><label class="form-label">Category</label><select name="category" class="form-control"><option value="stationery">Stationery</option><option value="uniform">Uniform</option><option value="books">Books</option><option value="bedding">Bedding</option><option value="toiletries">Toiletries</option><option value="sports">Sports</option><option value="other">Other</option></select></div>
+    <div class="form-group"><label class="form-label">Class (leave empty = all)</label><select name="classroom_id" class="form-control"><option value="">All Classes</option>{% for cls in classes %}<option value="{{ cls.id }}">{{ cls.display_name }}</option>{% endfor %}</select></div>
+    <div class="form-group"><label class="form-label">Quantity</label><input type="number" name="quantity" class="form-control" value="1"></div>
+    <div class="form-group"><label class="form-label">Unit</label><input type="text" name="unit" class="form-control" value="piece"></div>
+    <div class="form-group"><label class="form-label">Est. Cost ({{ currency }})</label><input type="number" name="estimated_cost" class="form-control" value="0" step="100"></div>
+    <div class="form-group"><label class="form-label">Term</label><select name="term" class="form-control"><option value="1">T1</option><option value="2">T2</option><option value="3">T3</option></select></div>
+    <div class="form-group"><label class="form-label">Year</label><input type="number" name="academic_year" class="form-control" value="{{ current_year }}"></div>
+    <div class="form-check" style="padding-top:24px"><input type="checkbox" name="is_mandatory" id="req_mand" checked><label for="req_mand" class="form-label mb-0">Mandatory</label></div>
+</div></div>
+<div class="modal-footer"><button type="button" onclick="closeModal('addReqModal')" class="btn btn-light">Cancel</button><button type="submit" class="btn btn-primary">Add Requirement</button></div>
+</form></div></div>
+{% endblock %}

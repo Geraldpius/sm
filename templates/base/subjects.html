@@ -1,0 +1,33 @@
+{% extends "base/base.html" %}
+{% block title %}Subjects{% endblock %}
+{% block breadcrumb %}<span class="current">Subjects</span>{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>Subjects</h1></div><button onclick="openModal('addSubjModal')" class="btn btn-primary"><i class="fas fa-plus"></i> Add Subject</button></div>
+<div class="card"><div class="table-wrap"><table>
+    <thead><tr><th>Code</th><th>Name</th><th>Level</th><th>Core</th><th>Max Marks</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>{% for s in subjects %}
+    <tr>
+        <td><code>{{ s.code }}</code></td><td style="font-weight:600">{{ s.name }}</td>
+        <td><span class="badge {% if s.level == 'A' %}badge-warning{% else %}badge-primary{% endif %}">{{ s.get_level_display }}</span></td>
+        <td>{% if s.is_core %}<span class="badge badge-success">Core</span>{% else %}<span class="badge badge-secondary">Elective</span>{% endif %}</td>
+        <td>{{ s.max_marks }}</td>
+        <td>{% if s.is_active %}<span class="badge badge-success">Active</span>{% else %}<span class="badge badge-danger">Inactive</span>{% endif %}</td>
+        <td><form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="action" value="toggle"><input type="hidden" name="subject_id" value="{{ s.id }}"><button class="btn btn-sm btn-light">Toggle</button></form></td>
+    </tr>
+    {% empty %}<tr><td colspan="7" class="text-center text-muted" style="padding:30px">No subjects yet.</td></tr>{% endfor %}</tbody>
+</table></div></div>
+<div class="modal-overlay" id="addSubjModal">
+    <div class="modal"><div class="modal-header"><h3>Add Subject</h3><button class="modal-close" onclick="closeModal('addSubjModal')">×</button></div>
+    <div class="modal-body"><form method="post">{% csrf_token %}<input type="hidden" name="action" value="create">
+    <div class="form-grid">
+        <div class="form-group"><label class="form-label">Code</label><input type="text" name="code" class="form-control" required placeholder="e.g. MATH"></div>
+        <div class="form-group"><label class="form-label">Name</label><input type="text" name="name" class="form-control" required placeholder="e.g. Mathematics"></div>
+        <div class="form-group"><label class="form-label">Level</label><select name="level" class="form-control"><option value="O">O-Level</option><option value="A">A-Level</option></select></div>
+        <div class="form-group"><label class="form-label">Max Marks</label><input type="number" name="max_marks" class="form-control" value="100"></div>
+        <div class="form-group"><label class="form-label">Pass Mark</label><input type="number" name="pass_mark" class="form-control" value="50"></div>
+        <div class="form-check" style="padding-top:24px"><input type="checkbox" name="is_core" id="is_core"><label for="is_core" class="form-label mb-0">Core Subject</label></div>
+    </div>
+    <div class="modal-footer"><button type="button" onclick="closeModal('addSubjModal')" class="btn btn-light">Cancel</button><button type="submit" class="btn btn-primary">Add Subject</button></div>
+    </form></div></div>
+</div>
+{% endblock %}

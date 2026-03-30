@@ -1,0 +1,108 @@
+{% extends "base/base.html" %}
+{% load humanize %}
+{% block title %}Director of Studies Dashboard{% endblock %}
+{% block breadcrumb %}<span class="current">DoS Dashboard</span>{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>&#x1F393; Director of Studies Dashboard</h1>
+        <p>Welcome, {{ request.user.get_full_name }} &mdash; Academic Performance Overview</p>
+    </div>
+    <div class="flex gap-2">
+        <a href="{% url 'create_exam' %}" class="btn btn-primary"><i class="fas fa-plus"></i> Create Exam</a>
+        <a href="{% url 'academic_report' %}" class="btn btn-outline"><i class="fas fa-chart-bar"></i> Full Report</a>
+    </div>
+</div>
+
+<!-- KPI -->
+<div class="stats-grid">
+    <div class="stat-card blue"><div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
+        <div class="stat-info"><h3>{{ total_students|intcomma }}</h3><p>Total Students</p></div></div>
+    <div class="stat-card gold"><div class="stat-icon"><i class="fas fa-chalkboard"></i></div>
+        <div class="stat-info"><h3>{{ total_classes }}</h3><p>Active Classes</p></div></div>
+    <div class="stat-card teal"><div class="stat-icon"><i class="fas fa-clipboard-list"></i></div>
+        <div class="stat-info"><h3>{{ exams_count }}</h3><p>Exams This Term</p></div></div>
+    <div class="stat-card red"><div class="stat-icon"><i class="fas fa-eye-slash"></i></div>
+        <div class="stat-info"><h3>{{ unpublished }}</h3><p>Unpublished Results</p>
+            {% if unpublished > 0 %}<span class="stat-trend down">Action needed</span>{% endif %}</div></div>
+</div>
+
+<!-- Class Performance Table -->
+<div class="card" style="margin-bottom:20px">
+    <div class="card-header"><h3><i class="fas fa-table" style="color:var(--primary)"></i> Class Performance — Term {{ current_term }}, {{ current_year }}</h3></div>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Class</th><th>Students</th><th>Latest Exam</th><th>Avg Score</th><th>Top Student</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>{% for cp in class_performance %}
+        <tr>
+            <td style="font-weight:700">{{ cp.class.display_name }}</td>
+            <td><span class="badge badge-primary">{{ cp.students }}</span></td>
+            <td style="font-size:13px">{% if cp.exam %}{{ cp.exam.name }}{% else %}<span class="text-muted">No exam yet</span>{% endif %}</td>
+            <td>
+                {% if cp.average > 0 %}
+                <span style="font-weight:700;color:{% if cp.average >= 60 %}var(--success){% elif cp.average >= 40 %}var(--warning){% else %}var(--danger){% endif %}">{{ cp.average }}%</span>
+                {% else %}<span class="text-muted">—</span>{% endif %}
+            </td>
+            <td style="font-size:13px">{{ cp.top_student.full_name|default:"—" }}</td>
+            <td>{% if cp.published %}<span class="badge badge-success">Published</span>{% else %}<span class="badge badge-warning">No Results</span>{% endif %}</td>
+            <td class="flex gap-2">
+                <a href="{% url 'class_access' cp.class.id %}" class="btn btn-sm btn-primary"><i class="fas fa-chart-bar"></i> Results</a>
+                {% if cp.exam %}
+                <a href="{% url 'enter_marks' cp.exam.id %}" class="btn btn-sm btn-light"><i class="fas fa-edit"></i></a>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}<tr><td colspan="7" class="text-center text-muted" style="padding:30px">No class data available</td></tr>{% endfor %}
+        </tbody>
+    </table></div>
+</div>
+
+<!-- Subject Analysis -->
+<div class="card" style="margin-bottom:20px">
+    <div class="card-header"><h3><i class="fas fa-book" style="color:var(--info)"></i> Subject Pass Rates</h3></div>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Subject</th><th>Entries</th><th>Average</th><th>Passed</th><th>Failed</th><th>Pass Rate</th></tr></thead>
+        <tbody>{% for ss in subject_stats %}
+        <tr>
+            <td style="font-weight:600">{{ ss.subject.name }}</td>
+            <td>{{ ss.total }}</td>
+            <td style="font-weight:700">{{ ss.average }}%</td>
+            <td style="color:var(--success);font-weight:600">{{ ss.passed }}</td>
+            <td style="color:var(--danger);font-weight:600">{{ ss.failed }}</td>
+            <td>
+                <div class="progress-bar" style="width:90px;margin-bottom:3px">
+                    <div class="progress-fill" style="width:{{ ss.pass_rate }}%;background:{% if ss.pass_rate >= 75 %}var(--success){% elif ss.pass_rate >= 50 %}var(--warning){% else %}var(--danger){% endif %}"></div>
+                </div>
+                <small style="font-size:11px;{% if ss.pass_rate < 50 %}color:var(--danger);font-weight:700{% else %}color:var(--text-muted){% endif %}">{{ ss.pass_rate }}%</small>
+            </td>
+        </tr>
+        {% empty %}<tr><td colspan="6" class="text-center text-muted" style="padding:20px">No exam data yet. Enter marks to see analysis.</td></tr>{% endfor %}
+        </tbody>
+    </table></div>
+</div>
+
+<!-- Recent Exams -->
+<div class="card">
+    <div class="card-header"><h3><i class="fas fa-clipboard-list" style="color:var(--accent)"></i> Recent Exams</h3>
+        <a href="{% url 'exam_list' %}" class="btn btn-light btn-sm">All Exams</a></div>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Exam</th><th>Class</th><th>Type</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>{% for exam in recent_exams %}
+        <tr>
+            <td style="font-weight:700">{{ exam.name }}</td>
+            <td>{{ exam.classroom }}</td>
+            <td><span class="badge badge-info">{{ exam.get_exam_type_display }}</span></td>
+            <td style="font-size:12px;color:var(--text-muted)">{{ exam.start_date|date:"d M Y" }}</td>
+            <td>{% if exam.is_published %}<span class="badge badge-success">Published</span>{% else %}<span class="badge badge-warning">Draft</span>{% endif %}</td>
+            <td class="flex gap-2">
+                <a href="{% url 'enter_marks' exam.pk %}" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i> Marks</a>
+                <a href="{% url 'subject_analysis' exam.pk %}" class="btn btn-sm btn-info"><i class="fas fa-chart-pie"></i></a>
+                <a href="{% url 'publish_exam' exam.pk %}" class="btn btn-sm {% if exam.is_published %}btn-warning{% else %}btn-success{% endif %}">
+                    <i class="fas fa-{% if exam.is_published %}eye-slash{% else %}eye{% endif %}"></i>
+                </a>
+            </td>
+        </tr>
+        {% empty %}<tr><td colspan="6" class="text-center text-muted" style="padding:20px">No exams this term yet</td></tr>{% endfor %}
+        </tbody>
+    </table></div>
+</div>
+{% endblock %}

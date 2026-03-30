@@ -1,0 +1,67 @@
+{% extends "base/base.html" %}
+{% block title %}Create Exam{% endblock %}
+{% block breadcrumb %}<a href="{% url 'exam_list' %}">Exams</a><span class="sep">/</span><span class="current">Create Exam</span>{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>Create Exam</h1><p>Set up a new exam for a class</p></div></div>
+<div class="card" style="max-width:700px">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Exam Name <span class="req">*</span></label>
+                    <input type="text" name="name" class="form-control" required placeholder="e.g. End of Term 1 Exams 2024">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Exam Type <span class="req">*</span></label>
+                    <select name="exam_type" class="form-control" required>
+                        <option value="bot">Beginning of Term Test</option>
+                        <option value="mid">Mid-Term Exam</option>
+                        <option value="eot" selected>End of Term Exam</option>
+                        <option value="mock">Mock Exam</option>
+                        <option value="cat">CAT (Continuous Assessment)</option>
+                        <option value="uneb">UNEB Exam</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Class <span class="req">*</span></label>
+                    <select name="classroom_id" class="form-control" required>
+                        <option value="">-- Select Class --</option>
+                        {% for cls in classes %}
+                        <option value="{{ cls.id }}">{{ cls }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Academic Year</label>
+                    <input type="number" name="academic_year" class="form-control" value="{{ current_year }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Term</label>
+                    <select name="term" class="form-control">
+                        <option value="1" {% if current_term == 1 %}selected{% endif %}>Term 1</option>
+                        <option value="2" {% if current_term == 2 %}selected{% endif %}>Term 2</option>
+                        <option value="3" {% if current_term == 3 %}selected{% endif %}>Term 3</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Max Marks Per Subject</label>
+                    <input type="number" name="max_marks" class="form-control" value="100" min="1" max="200">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Start Date <span class="req">*</span></label>
+                    <input type="date" name="start_date" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">End Date <span class="req">*</span></label>
+                    <input type="date" name="end_date" class="form-control" required>
+                </div>
+            </div>
+            <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px">
+                <a href="{% url 'exam_list' %}" class="btn btn-light"><i class="fas fa-times"></i> Cancel</a>
+                <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-save"></i> Create Exam &amp; Enter Marks</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
